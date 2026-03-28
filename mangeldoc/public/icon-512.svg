@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="76" fill="#D4620B"/>
+  <text x="256" y="220" dominant-baseline="middle" text-anchor="middle" fill="white" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="148px">MD</text>
+  <text x="256" y="350" dominant-baseline="middle" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-family="Arial,Helvetica,sans-serif" font-weight="600" font-size="48px">MängelDoc</text>
+</svg>
