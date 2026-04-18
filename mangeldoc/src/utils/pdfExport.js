@@ -13,7 +13,7 @@ const COMPANY = {
 };
 
 const TOTAL_PAGES_PLACEHOLDER = '{tp}';
-const BEHOBEN_H = 80;
+const BEHOBEN_H = 110;
 const FOOTER_Y = PAGE_H - 30;
 
 function drawHeader(doc) {
