@@ -19,29 +19,29 @@ const FOOTER_Y = PAGE_H - 30;
 function drawHeader(doc) {
   if (COMPANY_LOGO) {
     try {
-      doc.addImage(COMPANY_LOGO, 'PNG', MARGIN, 20, 200, 37);
+      doc.addImage(COMPANY_LOGO, 'PNG', MARGIN, 18, 260, 48);
     } catch (e) {
       // fallback: no logo
     }
   }
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
+  doc.setFontSize(12);
   doc.setTextColor(0, 0, 0);
-  doc.text(COMPANY.name, PAGE_W - MARGIN, 32, { align: 'right' });
+  doc.text(COMPANY.name, PAGE_W - MARGIN, 34, { align: 'right' });
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setTextColor(60, 60, 60);
-  let ty = 44;
+  let ty = 48;
   for (const line of COMPANY.lines) {
     doc.text(line, PAGE_W - MARGIN, ty, { align: 'right' });
-    ty += 12;
+    ty += 14;
   }
 }
 
 function drawTitle(doc, project) {
-  const titleY = 90;
+  const titleY = 100;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
@@ -71,6 +71,10 @@ function drawGrayBar(doc, text, y) {
 
   doc.setFillColor(180, 180, 180);
   doc.rect(MARGIN, y, CONTENT_W, barH, 'F');
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  doc.rect(MARGIN, y, CONTENT_W, barH, 'S');
 
   doc.setTextColor(0, 0, 0);
   doc.text(lines, MARGIN + 5, y + 13);
@@ -136,15 +140,16 @@ function drawFrame(doc, frameTop, imgData) {
 
 function drawFooter(doc, project, pageNum) {
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
+  doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
   let footerText = project.name;
   if (project.address) {
     footerText += ', ' + project.address;
   }
-  doc.text(footerText, MARGIN, FOOTER_Y);
+  doc.text(footerText, MARGIN, FOOTER_Y + 14);
 
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
   doc.text(
     `Seite ${pageNum} von ${TOTAL_PAGES_PLACEHOLDER}`,
     PAGE_W - MARGIN,
