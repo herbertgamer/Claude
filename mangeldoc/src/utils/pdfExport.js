@@ -2,32 +2,29 @@ import { jsPDF } from 'jspdf';
 import { burnAnnotations } from './imageUtils';
 import { COMPANY_LOGO } from './companyLogo';
 
-// A4 dimensions in points
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
 const MARGIN = 40;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 
-// Company info (hardcoded for SAFE TECH)
 const COMPANY = {
   name: 'SAFE TECH GmbH & Co KG',
   lines: ['Salzburger Straße 19', 'A - 5303 Thalgau', 'info@safe-tech.at'],
 };
 
 const TOTAL_PAGES_PLACEHOLDER = '{tp}';
+const BEHOBEN_H = 80;
+const FOOTER_Y = PAGE_H - 30;
 
 function drawHeader(doc) {
-  // Logo left side
   if (COMPANY_LOGO) {
     try {
-      // Logo aspect ratio: 1385x258 ≈ 5.37:1 → at height 45pt, width = 242pt
       doc.addImage(COMPANY_LOGO, 'PNG', MARGIN, 20, 200, 37);
     } catch (e) {
       // fallback: no logo
     }
   }
 
-  // Company text right side
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
@@ -44,9 +41,8 @@ function drawHeader(doc) {
 }
 
 function drawTitle(doc, project) {
-  const titleY = 95;
+  const titleY = 90;
 
-  // "MÄNGELLISTE" - centered, bold, underlined
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
   doc.setTextColor(0, 0, 0);
@@ -54,67 +50,91 @@ function drawTitle(doc, project) {
   const titleW = doc.getTextWidth(titleText);
   const titleX = PAGE_W / 2;
   doc.text(titleText, titleX, titleY, { align: 'center' });
-  // Manual underline
+
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.8);
   doc.line(titleX - titleW / 2, titleY + 2, titleX + titleW / 2, titleY + 2);
 
-  // Subtitle: "Begehung vom DD.MM.YYYY"
   doc.setFontSize(11);
   const dateStr = new Date(project.createdAt).toLocaleDateString('de-DE');
-  doc.text(`Begehung vom ${dateStr}`, titleX, titleY + 18, { align: 'center' });
+  doc.text(`Begehung vom ${dateStr}`, titleX, titleY + 16, { align: 'center' });
 
-  return titleY + 28; // return next Y position
+  return titleY + 24;
 }
 
 function drawGrayBar(doc, text, y) {
   doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
   const lines = doc.splitTextToSize(text, CONTENT_W - 10);
   const lineH = 14;
   const barH = Math.max(20, lines.length * lineH + 8);
 
-  // Gray background
   doc.setFillColor(180, 180, 180);
   doc.rect(MARGIN, y, CONTENT_W, barH, 'F');
 
-  // Black text
   doc.setTextColor(0, 0, 0);
   doc.text(lines, MARGIN + 5, y + 13);
 
-  return y + barH + 4;
+  return y + barH;
 }
 
-function drawBehobenTable(doc, y) {
+function drawFrame(doc, frameTop, imgData) {
+  const frameBottom = FOOTER_Y - 15;
+  const frameH = frameBottom - frameTop;
+  const photoH = frameH - BEHOBEN_H;
+  const behobenTop = frameTop + photoH;
   const colW = CONTENT_W / 2;
-  const headerH = 18;
-  const dataH = 65;
-  const totalH = headerH + dataH;
 
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
 
-  // Outer border
-  doc.rect(MARGIN, y, CONTENT_W, totalH, 'S');
-  // Vertical divider
-  doc.line(MARGIN + colW, y, MARGIN + colW, y + totalH);
-  // Horizontal divider
-  doc.line(MARGIN, y + headerH, MARGIN + CONTENT_W, y + headerH);
+  // Outer frame (photo + behoben combined)
+  doc.rect(MARGIN, frameTop, CONTENT_W, frameH, 'S');
 
-  // Header labels
+  // Horizontal line separating photo from behoben
+  doc.line(MARGIN, behobenTop, MARGIN + CONTENT_W, behobenTop);
+
+  // Vertical divider in behoben section
+  doc.line(MARGIN + colW, behobenTop, MARGIN + colW, frameBottom);
+
+  // Horizontal line for behoben header row (18pt from top of behoben)
+  const behobenHeaderH = 18;
+  doc.line(MARGIN, behobenTop + behobenHeaderH, MARGIN + CONTENT_W, behobenTop + behobenHeaderH);
+
+  // Behoben labels
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
-  doc.text('Behoben am', MARGIN + 4, y + 13);
-  doc.text('Behoben von', MARGIN + colW + 4, y + 13);
+  doc.text('Behoben am', MARGIN + 4, behobenTop + 13);
+  doc.text('Behoben von', MARGIN + colW + 4, behobenTop + 13);
 
-  return y + totalH;
+  // Place photo centered in the photo area
+  if (imgData) {
+    try {
+      const padding = 6;
+      const maxImgW = CONTENT_W - padding * 2;
+      const maxImgH = photoH - padding * 2;
+
+      if (imgData._img) {
+        const imgAspect = imgData._img.width / imgData._img.height;
+        let imgW = maxImgW;
+        let imgH = imgW / imgAspect;
+        if (imgH > maxImgH) {
+          imgH = maxImgH;
+          imgW = imgH * imgAspect;
+        }
+
+        const imgX = MARGIN + (CONTENT_W - imgW) / 2;
+        const imgY = frameTop + (photoH - imgH) / 2;
+        doc.addImage(imgData.src, 'JPEG', imgX, imgY, imgW, imgH);
+      }
+    } catch (e) {
+      console.error('Failed to add image to PDF', e);
+    }
+  }
 }
 
 function drawFooter(doc, project, pageNum) {
-  const footerY = PAGE_H - 25;
-
-  // Left: Project name + address
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
@@ -122,14 +142,13 @@ function drawFooter(doc, project, pageNum) {
   if (project.address) {
     footerText += ', ' + project.address;
   }
-  doc.text(footerText, MARGIN, footerY);
+  doc.text(footerText, MARGIN, FOOTER_Y);
 
-  // Right: "Seite X von Y"
   doc.setFont('helvetica', 'normal');
   doc.text(
     `Seite ${pageNum} von ${TOTAL_PAGES_PLACEHOLDER}`,
     PAGE_W - MARGIN,
-    footerY,
+    FOOTER_Y,
     { align: 'right' }
   );
 }
@@ -140,78 +159,41 @@ export async function generatePDF(project, defects) {
   for (let i = 0; i < defects.length; i++) {
     if (i > 0) doc.addPage();
     const defect = defects[i];
-    const pageNum = i + 1;
 
-    // Header
     drawHeader(doc);
-
-    // Title
     let y = drawTitle(doc, project);
 
-    // Gray description bar
     let descText = '';
     if (defect.location && defect.description) {
-      descText = `${defect.location} – ${defect.description}`;
+      descText = `${defect.location} \u2013 ${defect.description}`;
     } else {
       descText = defect.description || defect.location || 'Mangel ohne Beschreibung';
     }
     y = drawGrayBar(doc, descText, y);
 
-    // Photo with burned annotations
+    // Prepare image data
+    let imgPayload = null;
     if (defect.imageData) {
-      let imgData = defect.imageData;
+      let imgSrc = defect.imageData;
       if (defect.annotations && defect.annotations.length > 0 && defect.canvasWidth) {
         try {
-          imgData = await burnAnnotations(defect.imageData, defect.annotations, defect.canvasWidth);
+          imgSrc = await burnAnnotations(defect.imageData, defect.annotations, defect.canvasWidth);
         } catch (e) {
           console.error('Failed to burn annotations', e);
         }
       }
-
       try {
-        const img = await loadImage(imgData);
-        const imgAspect = img.width / img.height;
-
-        // Calculate max space for photo (leave room for table + footer)
-        const tableH = 90; // headerH + dataH
-        const footerSpace = 40;
-        const maxImgH = PAGE_H - y - tableH - footerSpace - 20;
-        const maxImgW = CONTENT_W - 4; // 2pt padding each side
-
-        let imgW = maxImgW;
-        let imgH = imgW / imgAspect;
-        if (imgH > maxImgH) {
-          imgH = maxImgH;
-          imgW = imgH * imgAspect;
-        }
-
-        // Photo border box
-        const boxX = MARGIN;
-        const boxW = CONTENT_W;
-        const boxH = imgH + 8;
-        doc.setDrawColor(0, 0, 0);
-        doc.setLineWidth(0.5);
-        doc.rect(boxX, y, boxW, boxH, 'S');
-
-        // Center image in box
-        const imgX = boxX + (boxW - imgW) / 2;
-        const imgY = y + 4;
-        doc.addImage(imgData, 'JPEG', imgX, imgY, imgW, imgH);
-
-        y += boxH + 6;
+        const img = await loadImage(imgSrc);
+        imgPayload = { src: imgSrc, _img: img };
       } catch (e) {
-        console.error('Failed to add image to PDF', e);
+        console.error('Failed to load image', e);
       }
     }
 
-    // Behoben table
-    y = drawBehobenTable(doc, y);
-
-    // Footer
-    drawFooter(doc, project, pageNum);
+    drawFrame(doc, y, imgPayload);
+    drawFooter(doc, project, i + 1);
   }
 
-  // Handle empty report (no defects)
   if (defects.length === 0) {
     drawHeader(doc);
     drawTitle(doc, project);
@@ -221,9 +203,7 @@ export async function generatePDF(project, defects) {
     drawFooter(doc, project, 1);
   }
 
-  // Replace total pages placeholder
   doc.putTotalPages(TOTAL_PAGES_PLACEHOLDER);
-
   return doc;
 }
 
