@@ -19,7 +19,7 @@ const FOOTER_Y = PAGE_H - 30;
 function drawHeader(doc) {
   if (COMPANY_LOGO) {
     try {
-      doc.addImage(COMPANY_LOGO, 'PNG', MARGIN, 18, 260, 48);
+      doc.addImage(COMPANY_LOGO, 'PNG', MARGIN, 28, 260, 48);
     } catch (e) {
       // fallback: no logo
     }
