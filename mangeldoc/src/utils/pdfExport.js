@@ -20,7 +20,8 @@ function drawHeader(doc) {
   // Logo left side
   if (COMPANY_LOGO) {
     try {
-      doc.addImage(COMPANY_LOGO, 'PNG', MARGIN, 25, 130, 30);
+      // Logo aspect ratio: 1385x258 ≈ 5.37:1 → at height 45pt, width = 242pt
+      doc.addImage(COMPANY_LOGO, 'PNG', MARGIN, 20, 200, 37);
     } catch (e) {
       // fallback: no logo
     }
@@ -86,8 +87,8 @@ function drawGrayBar(doc, text, y) {
 
 function drawBehobenTable(doc, y) {
   const colW = CONTENT_W / 2;
-  const headerH = 16;
-  const dataH = 22;
+  const headerH = 18;
+  const dataH = 65;
   const totalH = headerH + dataH;
 
   doc.setDrawColor(0, 0, 0);
@@ -104,8 +105,8 @@ function drawBehobenTable(doc, y) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
-  doc.text('Behoben am', MARGIN + 4, y + 11);
-  doc.text('Behoben von', MARGIN + colW + 4, y + 11);
+  doc.text('Behoben am', MARGIN + 4, y + 13);
+  doc.text('Behoben von', MARGIN + colW + 4, y + 13);
 
   return y + totalH;
 }
@@ -172,7 +173,7 @@ export async function generatePDF(project, defects) {
         const imgAspect = img.width / img.height;
 
         // Calculate max space for photo (leave room for table + footer)
-        const tableH = 42; // headerH + dataH
+        const tableH = 90; // headerH + dataH
         const footerSpace = 40;
         const maxImgH = PAGE_H - y - tableH - footerSpace - 20;
         const maxImgW = CONTENT_W - 4; // 2pt padding each side
