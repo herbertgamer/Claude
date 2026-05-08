@@ -37,12 +37,12 @@ export function burnAnnotations(imageDataUrl, annotations, canvasWidth) {
 
       const scale = img.width / canvasWidth;
 
-      ctx.strokeStyle = '#E53935';
       ctx.lineWidth = 3 * scale;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
       for (const ann of annotations) {
+        ctx.strokeStyle = ann.color || '#E53935';
         if (ann.type === 'circle') {
           const cx = ((ann.startX + ann.endX) / 2) * scale;
           const cy = ((ann.startY + ann.endY) / 2) * scale;

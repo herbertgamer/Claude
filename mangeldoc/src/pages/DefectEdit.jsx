@@ -7,6 +7,7 @@ export default function DefectEdit() {
   const navigate = useNavigate()
   const [defect, setDefect] = useState(null)
   const [tool, setTool] = useState('circle')
+  const [color, setColor] = useState('#E53935')
   const [annotations, setAnnotations] = useState([])
   const [drawing, setDrawing] = useState(false)
   const [startPos, setStartPos] = useState(null)
@@ -37,12 +38,12 @@ export default function DefectEdit() {
     const ctx = canvas.getContext('2d')
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    ctx.strokeStyle = '#E53935'
     ctx.lineWidth = 3
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
 
     for (const ann of annotations) {
+      ctx.strokeStyle = ann.color || '#E53935'
       if (ann.type === 'circle') {
         const cx = (ann.startX + ann.endX) / 2
         const cy = (ann.startY + ann.endY) / 2
@@ -88,7 +89,7 @@ export default function DefectEdit() {
 
     if (!drawing || !startPos) return
 
-    ctx.strokeStyle = '#E53935'
+    ctx.strokeStyle = color
     ctx.lineWidth = 3
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
@@ -124,7 +125,7 @@ export default function DefectEdit() {
       }
       ctx.stroke()
     }
-  }, [drawing, startPos, currentPos, freehandPoints, tool])
+  }, [drawing, startPos, currentPos, freehandPoints, tool, color])
 
   function getPos(e) {
     const rect = containerRef.current.getBoundingClientRect()
@@ -163,11 +164,11 @@ export default function DefectEdit() {
 
     let newAnn
     if (tool === 'circle' && startPos && currentPos) {
-      newAnn = { type: 'circle', startX: startPos.x, startY: startPos.y, endX: currentPos.x, endY: currentPos.y }
+      newAnn = { type: 'circle', color, startX: startPos.x, startY: startPos.y, endX: currentPos.x, endY: currentPos.y }
     } else if (tool === 'arrow' && startPos && currentPos) {
-      newAnn = { type: 'arrow', startX: startPos.x, startY: startPos.y, endX: currentPos.x, endY: currentPos.y }
+      newAnn = { type: 'arrow', color, startX: startPos.x, startY: startPos.y, endX: currentPos.x, endY: currentPos.y }
     } else if (tool === 'freehand' && freehandPoints.length > 1) {
-      newAnn = { type: 'freehand', points: freehandPoints }
+      newAnn = { type: 'freehand', color, points: freehandPoints }
     }
 
     if (newAnn) {
@@ -276,6 +277,17 @@ export default function DefectEdit() {
         </button>
         <button className="tool-btn undo" onClick={undo}>↩ Rückgängig</button>
         <button className="tool-btn" onClick={clearAll}>🗑 Alle</button>
+      </div>
+
+      <div className="color-picker-bar">
+        {['#E53935', '#1E88E5', '#43A047', '#FDD835', '#212121'].map(c => (
+          <button
+            key={c}
+            className={`color-dot${color === c ? ' active' : ''}`}
+            style={{ background: c }}
+            onClick={() => setColor(c)}
+          />
+        ))}
       </div>
 
       <div className="defect-form">

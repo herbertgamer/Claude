@@ -495,6 +495,48 @@ textarea.form-input {
   flex: 1;
 }
 
+/* Color picker */
+.color-picker-bar {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.color-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.color-dot.active {
+  border-color: var(--text);
+  transform: scale(1.15);
+}
+
+/* Edit project form */
+.edit-project-form {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.edit-project-form .btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-project-form .btn-row .btn {
+  flex: 1;
+}
+
 /* Defect detail area under annotation */
 .defect-form {
   margin-top: 16px;

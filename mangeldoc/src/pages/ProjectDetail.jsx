@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getProject, getDefectsByProject, saveDefect } from '../utils/db'
+import { getProject, getDefectsByProject, saveDefect, saveProject } from '../utils/db'
 import { compressImage } from '../utils/imageUtils'
 
 export default function ProjectDetail() {
@@ -8,6 +8,8 @@ export default function ProjectDetail() {
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [defects, setDefects] = useState([])
+  const [editing, setEditing] = useState(false)
+  const [editData, setEditData] = useState({})
 
   useEffect(() => {
     loadData()
@@ -20,6 +22,31 @@ export default function ProjectDetail() {
     const d = await getDefectsByProject(id)
     d.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
     setDefects(d)
+  }
+
+  function startEditing() {
+    const dateObj = new Date(project.createdAt)
+    const dateStr = dateObj.toISOString().split('T')[0]
+    setEditData({
+      name: project.name,
+      address: project.address || '',
+      date: dateStr,
+    })
+    setEditing(true)
+  }
+
+  async function handleSaveEdit() {
+    const dateParts = editData.date.split('-')
+    const newDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2], 12)
+    const updated = {
+      ...project,
+      name: editData.name,
+      address: editData.address,
+      createdAt: newDate.getTime(),
+    }
+    await saveProject(updated)
+    setProject(updated)
+    setEditing(false)
   }
 
   async function handleFiles(files) {
@@ -58,9 +85,44 @@ export default function ProjectDetail() {
       <div className="page-header">
         <button className="back-btn" onClick={() => navigate('/')}>←</button>
         <h1>{project.name}</h1>
+        <button className="btn btn-sm btn-outline" onClick={startEditing}>Bearbeiten</button>
       </div>
 
-      {project.inspectionType && (
+      {editing && (
+        <div className="edit-project-form">
+          <div className="form-group">
+            <label>Projektname</label>
+            <input
+              className="form-input"
+              value={editData.name}
+              onChange={e => setEditData(prev => ({ ...prev, name: e.target.value }))}
+            />
+          </div>
+          <div className="form-group">
+            <label>Adresse</label>
+            <input
+              className="form-input"
+              value={editData.address}
+              onChange={e => setEditData(prev => ({ ...prev, address: e.target.value }))}
+            />
+          </div>
+          <div className="form-group">
+            <label>Begehungsdatum</label>
+            <input
+              type="date"
+              className="form-input"
+              value={editData.date}
+              onChange={e => setEditData(prev => ({ ...prev, date: e.target.value }))}
+            />
+          </div>
+          <div className="btn-row">
+            <button className="btn btn-outline" onClick={() => setEditing(false)}>Abbrechen</button>
+            <button className="btn btn-primary" onClick={handleSaveEdit}>Speichern</button>
+          </div>
+        </div>
+      )}
+
+      {!editing && project.inspectionType && (
         <div style={{ marginBottom: 12, color: 'var(--text-light)', fontSize: 13 }}>
           {project.inspectionType}
           {project.address && ` · ${project.address}`}
@@ -84,7 +146,7 @@ export default function ProjectDetail() {
 
       <div className="photo-buttons">
         <label className="photo-btn-label">
-          📷 Foto aufnehmen
+          Foto aufnehmen
           <input
             type="file"
             accept="image/*"
@@ -93,7 +155,7 @@ export default function ProjectDetail() {
           />
         </label>
         <label className="photo-btn-label secondary">
-          🖼 Aus Galerie
+          Aus Galerie
           <input
             type="file"
             accept="image/*"
@@ -123,7 +185,7 @@ export default function ProjectDetail() {
             style={{ marginTop: 20 }}
             onClick={() => navigate(`/report/${id}`)}
           >
-            📄 Bericht anzeigen
+            Bericht anzeigen
           </button>
         </>
       )}
