@@ -221,19 +221,29 @@ function loadImage(src) {
   });
 }
 
+function buildFilename(project) {
+  const d = new Date(project.createdAt);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const type = project.inspectionType ? ` ${project.inspectionType}` : '';
+  return `${yyyy} ${mm} ${dd} ${project.name} - M\u00E4ngelliste${type}.pdf`;
+}
+
 export async function exportPDF(project, defects) {
   const doc = await generatePDF(project, defects);
-  doc.save(`${project.name}-Maengelliste.pdf`);
+  doc.save(buildFilename(project));
 }
 
 export async function sharePDF(project, defects) {
   const doc = await generatePDF(project, defects);
+  const filename = buildFilename(project);
   const blob = doc.output('blob');
-  const file = new File([blob], `${project.name}-Maengelliste.pdf`, { type: 'application/pdf' });
+  const file = new File([blob], filename, { type: 'application/pdf' });
 
   if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
     await navigator.share({
-      title: `M\u00E4ngelliste - ${project.name}`,
+      title: filename.replace('.pdf', ''),
       files: [file],
     });
   } else {
