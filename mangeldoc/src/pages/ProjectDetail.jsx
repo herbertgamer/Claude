@@ -31,6 +31,7 @@ export default function ProjectDetail() {
       name: project.name,
       address: project.address || '',
       date: dateStr,
+      inspectionType: project.inspectionType || '',
     })
     setEditing(true)
   }
@@ -42,6 +43,7 @@ export default function ProjectDetail() {
       ...project,
       name: editData.name,
       address: editData.address,
+      inspectionType: editData.inspectionType,
       createdAt: newDate.getTime(),
     }
     await saveProject(updated)
@@ -113,6 +115,15 @@ export default function ProjectDetail() {
               className="form-input"
               value={editData.date}
               onChange={e => setEditData(prev => ({ ...prev, date: e.target.value }))}
+            />
+          </div>
+          <div className="form-group">
+            <label>Prüfart</label>
+            <input
+              className="form-input"
+              value={editData.inspectionType}
+              onChange={e => setEditData(prev => ({ ...prev, inspectionType: e.target.value }))}
+              placeholder="z.B. Blitzschutz"
             />
           </div>
           <div className="btn-row">
